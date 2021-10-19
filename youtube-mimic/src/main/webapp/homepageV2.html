@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Home page</title>
+
+<!--Import Google Icon Font-->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+	rel="stylesheet">
+
+<!-- Compiled and minified CSS -->
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+	media="screen,projection" />
+
+<!--Let browser know website is optimized for mobile-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style type="text/css">
+.navcard {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	position: fixed;
+	height: 100%;
+	overflow: auto;
+}
+
+.linavcard div {
+	display: block;
+	color: #000;
+	padding: 8px 16px;
+	text-decoration: none;
+}
+
+.linavcard div.active {
+	background-color: #ee6e73;
+	color: white;
+}
+
+.linavcard div:hover:not(.active) {
+	background-color: #ee6e73;
+	color: white;
+}
+
+.nav-wrapper {
+	position: fixed;
+}
+
+.card-para {
+	width: 100%;
+	height: 40px;
+	overflow: hidden;
+	font-size: small;
+}
+
+.card-title {
+	overflow: auto;
+	height: 35px;
+}
+</style>
+</head>
+<body>
+
+	<div class="navbar-fixed">
+		<nav class="col s12">
+			<div class="row nav-wrapper">
+				<a href="#" data-target="slide-out" class="col s3 button-collapse"><i
+					class="material-icons" style="padding-left: 15px;">menu</i></a>
+				<form class="col s6 " onsubmit="return callSearch()">
+					<div class="input-field " style="padding: 10px;">
+						<input id="search" type="search" required
+							style="border-radius: 15px;"> <label
+							class="col s1 label-icon" for="search"><i
+							class="material-icons">search</i></label> <i
+							class="col s1 material-icons">close</i>
+					</div>
+				</form>
+				<div class="col s3">
+					<ul class="right hide-on-med-and-down row">
+						<li class="col s4"><a href=""><i
+								class="material-icons">view_module</i></a></li>
+						<li class="col s4"><a href=""><i
+								class="material-icons">refresh</i></a></li>
+						<li class="col s4"><a href=""><i
+								class="material-icons">more_vert</i></a></li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+	</div>
+
+
+
+
+	<div class="row ">
+
+		<div class="col s2  card navcard" style="padding: 0px;">
+			<ul style="margin: 0px">
+				<li class="linavcard"><div class="section row"
+						style="margin: 0px; padding-left: 15px;">
+						<i class="col s3 material-icons" style="margin-top: 15px;">home</i>
+						<p class="col s8" style="padding: 0;">home</p>
+					</div></li>
+				<li class="linavcard"><div class="section row"
+						style="margin: 0px; padding-left: 15px;">
+						<i class="col s3 material-icons" style="margin-top: 15px;">list</i>
+						<p class="col s8" style="padding: 0;">playlist</p>
+					</div></li>
+			</ul>
+		</div>
+		<div class="col s10 offset-s2">
+			<div class="row" id="videoCardContent"></div>
+		</div>
+
+	</div>
+
+
+
+	<!-- Compiled and minified JavaScript -->
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+	<script type="text/javascript">
+		M.Tabs.init(document.getElementById("nav-wrapper"));
+		M.AutoInit();
+		
+		var utils = {
+		        callPostWithBodyjson: (url, objBody) => {
+		            return new Promise(function (resolve, reject) {
+		                var xmlhttp = new XMLHttpRequest();
+		                xmlhttp.open("POST", url);
+		                xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		                xmlhttp.onload = (res) => {
+		                    if (res.currentTarget.status >= 200 && res.currentTarget.status <= 299) {
+		                        resolve(JSON.parse(res.currentTarget.responseText))
+		                    } else {
+		                        reject(JSON.parse(res.currentTarget.responseText))
+		                    }
+		                }
+		                xmlhttp.send(JSON.stringify(objBody));
+		            });
+		        },
+		        getHTMLFromUrl: (url, method) => {
+		            return new Promise(function (resolve, reject) {
+		                let req = new XMLHttpRequest();
+		                req.open(method, url);
+		                req.onload = () => {
+		                    if (req.status == 200) {
+		                        resolve(req.response);
+		                    } else {
+		                        reject("File not Found");
+		                    }
+		                };
+		                req.send();
+		            });
+		            }
+		        
+		    }
+		
+		var result = {};
+		 var callSearch = () => {
+
+		        try {
+		            var keyword =  document.getElementById("search").value;
+		            
+		            utils.getHTMLFromUrl('/homepage/v1/video?keyword='+keyword,"GET").then((res) => {
+
+		                result = JSON.parse(res);
+		                let content = ""; 
+		                result.items.forEach(item=>
+		                content = content + 
+		                '<div class="col s12 m3">'+
+		                '<div class="card hoverable">'+
+							'<div class="card-image">'+
+							'<img src='+item.snippet.thumbnails.medium.url+'>'+
+								
+								 '<a class="btn-floating halfway-fab waves-effect waves-light red">'+
+								 '<i class="material-icons">add</i></a>'+
+								 '</div><div class="card-content">'+
+								 '<span class="card-title">'+item.snippet.channelTitle+'</span>'+
+								 '<p class = "card-para">'+item.snippet.title+'</p>'+   
+								 '</div></div></div>'
+		                );
+		                
+		                document.getElementById("videoCardContent").innerHTML = content;
+		                
+		                }, (res) => {
+		                
+		            });
+		        } catch (e) {
+		            console.error(e)
+		        }
+
+		        return false;
+		    }
+		 callSearch();
+	</script>
+
+
+</body>
+</html>

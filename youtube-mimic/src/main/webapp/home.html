@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+</head>
+<body>
+	<table>
+		<tr>
+			<td><b>create play list with empty video</b></td>
+		</tr>
+		<tr>
+			<td>playlist name:</td>
+			<td><input id="createplaylist" type="text"></td>
+
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<button type="button" id="create" onclick="create()">create</button>
+			</td>
+		</tr>
+
+		<tr>
+			<td><br> <b>create play list with video id</b></td>
+
+
+		</tr>
+		<tr>
+			<td>playlist name:</td>
+			<td><input id="updateCreateplaylist" type="text"></td>
+
+		</tr>
+		<tr>
+			<td>video id:</td>
+			<td><input id="updateVideoid" type="text"></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<button type="button" id="update" onclick="update()">create</button>
+			</td>
+		</tr>
+
+		<tr>
+			<td><br> <b>get playlist</b></td>
+
+		</tr>
+		<tr>
+			<td>playlist name:</td>
+			<td><input id="getplaylist" type="text"></td>
+
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<button type="button" id="getlist" onclick="getPlaylist()">create</button>
+			</td>
+		</tr>
+
+
+		<tr>
+			<td><br> <b>delete playlist</b></td>
+
+		</tr>
+		<tr>
+			<td>playlist name:</td>
+			<td><input id="deletePlaylist" type="text"></td>
+
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<button type="button" id="delete" onclick="deletePlaylist()">create</button>
+			</td>
+		</tr>
+		
+		<tr>
+			<td><br> <b>delete playlist video by video id</b></td>
+
+		</tr>
+		<tr>
+			<td>playlist name:</td>
+			<td><input id="deletePlaylistName" type="text"></td>
+
+		</tr>
+		<tr>
+			<td>Video id:</td>
+			<td><input id="deleteVideoId" type="text"></td>
+
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<button type="button" id="deletevideo" onclick="deletePlaylistvideo()">create</button>
+			</td>
+		</tr>
+	</table>
+
+
+
+
+
+
+	<br>
+	<div id="createplaylistOutput"></div>
+
+	<div id="updateplaylistOutput"></div>
+
+	<div id="getPlaylistOutput">
+		<table>
+			<thead>
+				<tr>
+					<th>playlist id |</th>
+					<th>user id |</th>
+					<th>playlist name |</th>
+					<th>created at |</th>
+					<th>modified at |</th>
+					<th>videos |</th>
+				</tr>
+			</thead>
+			<tbody></tbody>
+		</table>
+	</div>
+
+	<div id="deletePlaylistOutput"></div>
+
+</body>
+
+<script type="text/javascript">
+	
+var utils = {
+        callPostWithBodyjson: (url,method, objBody) => {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.open(method, url);
+                xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                xmlhttp.onload = (res) => {
+                    if (res.currentTarget.status >= 200 && res.currentTarget.status <= 299) {
+                        resolve(JSON.parse(res.currentTarget.responseText))
+                    } else {
+                        reject(JSON.parse(res.currentTarget.responseText))
+                    }
+                }
+                xmlhttp.send(JSON.stringify(objBody));
+            });
+        },
+        getHTMLFromUrl: (url, method) => {
+            return new Promise(function (resolve, reject) {
+                let req = new XMLHttpRequest();
+                req.open(method, url);
+                req.onload = () => {
+                    if (req.status == 200) {
+                        resolve(req.response);
+                    } else {
+                        reject("File not Found");
+                    }
+                };
+                req.send();
+            });
+            }
+        
+    }
+    
+var create = () => {
+    
+	 var jsonBody = {
+			 playlistName: document.getElementById("createplaylist").value
+	    };
+    
+        utils.callPostWithBodyjson('/v1/playlist',"POST", jsonBody).then(() => {
+            console.log("success");
+        }, (res) => {
+            
+        });
+    
+    return false;
+}
+
+var getPlaylist = () => {
+    
+    	var playlistName= document.getElementById("getplaylist").value;
+    
+        utils.getHTMLFromUrl('/v1/playlist?playlistName='+playlistName,"GET").then(() => {
+            console.log("success");
+        }, (res) => {
+            
+        });
+    
+    return false;
+}
+
+var update = () => {
+    var jsonBody = {
+    		playlistName: document.getElementById("updateCreateplaylist").value,
+    		videoId: document.getElementById("updateVideoid").value
+    };
+        utils.callPostWithBodyjson('/v1/playlist',"PUT", jsonBody).then(() => {
+            console.log("success");
+        }, (res) => {
+            
+        });
+    
+    return false;
+}
+
+var deletePlaylist = () => {
+    var jsonBody = {
+    		playlistName: document.getElementById("deletePlaylist").value
+    };
+        utils.callPostWithBodyjson('/v1/playlist',"DELETE", jsonBody).then(() => {
+            console.log("success");
+            
+        }, (res) => {
+            
+        });
+    
+    return false;
+}
+
+var deletePlaylistvideo = () => {
+    var jsonBody = {
+    		playlistName: document.getElementById("deletePlaylistName").value,
+    		videoId:document.getElementById("deleteVideoId").value
+    		
+    };
+        utils.callPostWithBodyjson('/playlist/v1/video',"DELETE", jsonBody).then(() => {
+            console.log("success");
+            
+        }, (res) => {
+            
+        });
+    
+    return false;
+}
+
+</script>
+</html>
