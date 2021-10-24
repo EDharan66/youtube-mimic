@@ -38,7 +38,7 @@
 }
 
 .linavcard div:hover:not(.active) {
-	background-color: #ee6e73;
+	background-color: #f7bdbf;
 	color: white;
 }
 
@@ -64,8 +64,9 @@
 	<div class="navbar-fixed">
 		<nav class="col s12">
 			<div class="row nav-wrapper">
-				<a href="#" data-target="slide-out" class="col s3 button-collapse"><i
-					class="material-icons" style="padding-left: 15px;">menu</i></a>
+				<a data-target="slide-out" class="col s3 button-collapse"><i
+					class="material-icons" style="padding-left: 15px; cursor: pointer;"
+					id="nav-icon" onclick="sidenav()">navigate_before</i></a>
 				<form class="col s6 " onsubmit="return callSearch()">
 					<div class="input-field " style="padding: 10px;">
 						<input id="search" type="search" required
@@ -77,12 +78,8 @@
 				</form>
 				<div class="col s3">
 					<ul class="right hide-on-med-and-down row">
-						<li class="col s4"><a href=""><i
-								class="material-icons">view_module</i></a></li>
-						<li class="col s4"><a href=""><i
-								class="material-icons">refresh</i></a></li>
-						<li class="col s4"><a href=""><i
-								class="material-icons">more_vert</i></a></li>
+						<li class="col s12"><a class="col s6" onclick="signout()">logout</a><i
+							class="col s6 material-icons">exit_to_app</i></li>
 					</ul>
 				</div>
 			</div>
@@ -94,24 +91,80 @@
 
 	<div class="row ">
 
-		<div class="col s2  card navcard" style="padding: 0px;">
+		<div class="col s2  card navcard" id="side-nav" style="padding: 0px;">
 			<ul style="margin: 0px">
-				<li class="linavcard"><div class="section row"
-						style="margin: 0px; padding-left: 15px;">
+				<li class="linavcard" onclick="homepage()"><div
+						class=" row active" id="homepageNavTag"
+						style="margin: 0px; padding-left: 15px; cursor: pointer;">
 						<i class="col s3 material-icons" style="margin-top: 15px;">home</i>
 						<p class="col s8" style="padding: 0;">home</p>
 					</div></li>
-				<li class="linavcard"><div class="section row"
-						style="margin: 0px; padding-left: 15px;">
+				<li class="linavcard" onclick="playlistpage()"><div
+						class=" row" id="playlistNavTag"
+						style="margin: 0px; padding-left: 15px; cursor: pointer;"
+						onclick="playlistpage()">
 						<i class="col s3 material-icons" style="margin-top: 15px;">list</i>
 						<p class="col s8" style="padding: 0;">playlist</p>
 					</div></li>
 			</ul>
 		</div>
-		<div class="col s10 offset-s2">
-			<div class="row" id="videoCardContent"></div>
+		<div class="col s10 offset-s2" id="mainPlatform">
+			<div class="row" id="videoPlayContent">
+				<div id="videoCardContent"></div>
+			</div>
+
+			<!-- Modal Structure -->
+			<div id="modal1" class="modal modal-fixed-footer">
+				<div class="modal-content">
+
+					<h4>Playlists create</h4>
+
+					<div class="row" style="padding-left: 13px;">
+
+						<div class="row" style="margin-bottom: 0px;">
+							<div class="input-field col s6">
+								<input id="playlist_name" type="text" class="validate">
+								<label for="playlist_name">Playlist Name</label> <input
+									type="hidden" id="videoID-hidden" value="">
+							</div>
+
+						</div>
+						<div class="row">
+							<!-- Switch -->
+							<div class="switch col s12 m6">
+								<label> create new <input type="checkbox"
+									id="on_or_off_checkbox" onclick="checklever()"> <span
+									class="lever"></span> add exist
+								</label>
+							</div>
+
+						</div>
+						<div class="row" id="playlist_select">
+							<div class="input-field col s12 m6">
+								<select class="browser-default" id="dropdownOptionlist">
+
+
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer" id="playlist-addfooter">
+					<a href="#!" class="modal-close waves-effect waves-green btn-flat"
+						onclick="savePlaylistvideo()">save</a>
+				</div>
+			</div>
+
+
+
+
 		</div>
 
+
+		<!-- Dropdown Structure -->
+		<ul id='dropdown1' class='dropdown-content'>
+			<li><a href="#!"><i class="material-icons">delete</i>delete</a></li>
+		</ul>
 	</div>
 
 
@@ -123,11 +176,14 @@
 		M.Tabs.init(document.getElementById("nav-wrapper"));
 		M.AutoInit();
 		
+		
+		
+		
 		var utils = {
-		        callPostWithBodyjson: (url, objBody) => {
+		        callPostWithBodyjson: (url,method, objBody) => {
 		            return new Promise(function (resolve, reject) {
 		                var xmlhttp = new XMLHttpRequest();
-		                xmlhttp.open("POST", url);
+		                xmlhttp.open(method, url);
 		                xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 		                xmlhttp.onload = (res) => {
 		                    if (res.currentTarget.status >= 200 && res.currentTarget.status <= 299) {
@@ -153,36 +209,107 @@
 		                req.send();
 		            });
 		            }
-		        
 		    }
 		
 		var result = {};
+		var resultbyVideoId = {};
+		var playlists = {};
+		var videoPlaylistId = "";
+		var videoContent = [];
+		
+		var verticalCard =()=> {
+			let content = ""; 
+            result.items.forEach(item=>
+            content = content + 
+            '<div class="col s12 m3">'+
+            '<div class="card hoverable">'+
+				'<div class="card-image" style="cursor: pointer;" >'+
+				'<img src='+item.snippet.thumbnails.medium.url+' onclick=democall("'+item.id.videoId+'")>'+
+					
+					 '<a class="modal-trigger btn-floating halfway-fab waves-effect waves-light red "  data-target="modal1" onclick=setId("'+item.id.videoId+'")>'+
+					 '<i class="material-icons" >add</i></a>'+
+					 '</div><div class="card-content">'+
+					 '<span class="card-title">'+item.snippet.channelTitle+'</span>'+
+					 '<p class = "card-para">'+item.snippet.title+'</p>'+   
+					 '</div></div></div>'
+            );
+            
+            document.getElementById("videoPlayContent").innerHTML = content;
+            
+            document.getElementById("side-nav").style.display="";
+            document.getElementById("nav-icon").innerHTML="menu"
+			 document.getElementById("mainPlatform").classList.add("offset-s2");
+			 document.getElementById("mainPlatform").classList.replace("s12","s10");
+		}
+		
+		var horizontalCard = (videoId)=>{
+			let content = ""; 
+            result.items.forEach(item=>{
+            	if(item.id.videoId != videoId){
+                	content = content + 
+                	'<div class="col s12">'+
+                    '<div class="card horizontal hoverable">'+
+                    
+        			'<div class="card-image" style="cursor: pointer;" onclick=democall("'+item.id.videoId+'")>'+
+                    '<img src='+item.snippet.thumbnails.medium.url+'>'+
+                    '</div>'+
+                    '<div class="card-stacked">'+
+                    '<div class="card-content" style="padding-top: 10px;padding-bottom: 0px;padding-right: 0px;">'+
+                    '<p class="card-title" style="margin-top: 0px;margin-bottom: 0px;font-size: larger;font-weight: bolder;">'+item.snippet.channelTitle+'</p>'+
+					 '<p class = "card-para">'+item.snippet.title+'</p>'+
+					 '</div>'+
+					 '</div>'+
+					 
+					 '</div>'+
+					 '</div>'
+                }
+            }       
+ 			);
+            
+            document.getElementById("videoCardContent").innerHTML = content;
+            
+            
+		}
+		
+		var horizontalplaylistVideoCard = (index)=>{
+			let content = ""; 
+			for(var i=0; i<videoContent[index].length ;i++){
+				 
+				 var item1 = resultbyVideoId.items.filter(obj=>obj.id===videoContent[index][i]);
+				 src = item1[0].snippet.thumbnails.medium.url;
+				 
+				 content = content + 
+	             	'<div class="col s12">'+
+	                 '<div class="card horizontal hoverable">'+
+	                 
+	     			'<div class="card-image" style="cursor: pointer;" onclick=playvideoCall("'+videoContent[index][i]+'")>'+
+	                 '<img src='+src+'>'+
+	                 '</div>'+
+	                 '<div class="card-stacked">'+
+	                 '<div class="card-content" style="padding-top: 10px;padding-bottom: 0px;padding-right: 0px;">'+
+	                 '<p class="card-title" style="margin-top: 0px;margin-bottom: 0px;font-size: larger;font-weight: bolder;">'+item1[0].snippet.channelTitle+'</p>'+
+						 '<p class = "card-para">'+item1[0].snippet.title+'</p>'+
+						 '</div>'+
+						 '</div>'+
+						 
+						 '</div>'+
+						 '</div>'
+			 }
+			 document.getElementById("playlist-nextvideo").innerHTML = content;
+			 
+		}
+		
+		
 		 var callSearch = () => {
-
 		        try {
 		            var keyword =  document.getElementById("search").value;
 		            
 		            utils.getHTMLFromUrl('/homepage/v1/video?keyword='+keyword,"GET").then((res) => {
 
 		                result = JSON.parse(res);
-		                let content = ""; 
-		                result.items.forEach(item=>
-		                content = content + 
-		                '<div class="col s12 m3">'+
-		                '<div class="card hoverable">'+
-							'<div class="card-image">'+
-							'<img src='+item.snippet.thumbnails.medium.url+'>'+
-								
-								 '<a class="btn-floating halfway-fab waves-effect waves-light red">'+
-								 '<i class="material-icons">add</i></a>'+
-								 '</div><div class="card-content">'+
-								 '<span class="card-title">'+item.snippet.channelTitle+'</span>'+
-								 '<p class = "card-para">'+item.snippet.title+'</p>'+   
-								 '</div></div></div>'
-		                );
-		                
-		                document.getElementById("videoCardContent").innerHTML = content;
-		                
+		                verticalCard();
+		                document.getElementById("playlistNavTag").classList.remove("active");
+						 document.getElementById("homepageNavTag").classList.add("active");
 		                }, (res) => {
 		                
 		            });
@@ -192,9 +319,340 @@
 
 		        return false;
 		    }
-		 callSearch();
+		 var getVideo = () => {
+		        try {
+		            
+		            
+		            utils.getHTMLFromUrl('/v1/videoList?videoId='+videoPlaylistId,"GET").then((res) => {
+		            	
+		                resultbyVideoId = JSON.parse(res);
+		                }, (res) => {
+		                
+		            });
+		        } catch (e) {
+		            console.error(e)
+		        }
+
+		        return false;
+		    }
+		callSearch();
+		 
+		var item;
+		
+		 var democall = (id)=>{
+			 item = result.items.filter(obj=>obj.id.videoId===id);
+			 const date = item[0].snippet.publishedAt.split("T");
+			 var videoCondent = '<div class="col s8" style="margin-top: 15px;">'+
+			 
+			 
+			 '<div class="video-container">'+
+			 '<iframe width="853" height="480" src="//www.youtube.com/embed/'+item[0].id.videoId+'?rel=0" frameborder="0" allowfullscreen></iframe>'+
+			 
+					 '</div>'+
+					 '<div class="section">'
+					 +'<h5>'+item[0].snippet.title+'</h5>'
+					 +' <spam>'+date[0]+'</spam><i class="material-icons" style="font-size: xx-small;">chevron_right</i><spam style="font-weight: bold;">'+item[0].snippet.channelTitle+'</spam>'+
+					 '<div class="row modal-trigger" style="float: right;font-size: larger;font-weight: 500;margin-right: 30px;cursor: pointer;margin-top: 0px;margin-bottom: 0px;"  data-target="modal1" onclick=setId("'+item[0].id.videoId+'")>'+
+					 '<div class="col s12" style=" padding: 0px; "><i class="col s6 material-icons" style="font-size: 20px;padding-top: 5px;padding-right: 0px;">playlist_add</i>'+
+					 '<spam class="col s6" style="padding: 0px;">SAVE</spam></div></div>'
+					 +' </div><div class="divider">'
+					 +'</div>'+
+					 '<div class="section">'
+					 +' <p>'+item[0].snippet.description+'</p>'
+					 
+					 +'</div>'+'</div>'+
+					 '<div class="col s4"><h5>Next videos</h5><div id="videoCardContent"></div></div>'
+			 document.getElementById("videoPlayContent").innerHTML = videoCondent;
+			 document.getElementById("videoPlayContent").style="padding-left: 40px; padding-right: 0px;"
+			 horizontalCard(id);
+			 document.getElementById("side-nav").style.display="none";
+			 document.getElementById("mainPlatform").classList.remove("offset-s2");
+			 document.getElementById("mainPlatform").classList.replace("s10","s12");
+		 }
+		 
+		 var homepage = ()=>{
+			 	 document.getElementById("videoPlayContent").style="";
+				 document.getElementById("playlistNavTag").classList.remove("active");
+				 document.getElementById("homepageNavTag").classList.add("active");
+			 if(Object.keys(result).length===0){
+				 callSearch();
+			 }else{
+				 verticalCard();
+			 }
+		 }
+		 
+		 var callplaylist = ()=>{
+			 try {
+		            var playlistName = "";
+		            
+		            utils.getHTMLFromUrl('/v1/playlist?playlistName='+playlistName,"GET").then((res) => {
+		                playlists = JSON.parse(res);
+		                
+		                let videoContent = [];
+		   			 	videoPlaylistId = "";
+			   			 for (var i = 0; i < playlists.length; i++) {
+			   				 for (let x in playlists[i].videos){
+			   					 if(!videoContent.includes(x)){
+			   	                     videoContent.push(x);
+			   						 videoPlaylistId = videoPlaylistId+x+',';
+			   	                  }
+			   				 }			 
+			   			 }
+		   			 	getVideo();
+		                }, (res) => {
+		                
+		            });
+		        } catch (e) {
+		            console.error(e)
+		        }
+
+		        return false;
+		 }
+		 
+		 var playvideoCall = (id,index)=>{
+			 item = resultbyVideoId.items.filter(obj=>obj.id===id);
+			 const date = item[0].snippet.publishedAt.split("T");
+			 var videoCondent = '<div class="col s8" style="margin-top: 15px;">'+
+			 
+			 
+			 '<div class="video-container">'+
+			 '<iframe width="853" height="480" src="//www.youtube.com/embed/'+item[0].id+'?rel=0" frameborder="0" allowfullscreen></iframe>'+
+			 
+					 '</div>'+
+					 '<div class="section">'
+					 +'<h5>'+item[0].snippet.title+'</h5>'
+					 +' <spam>'+date[0]+'</spam><i class="material-icons" style="font-size: xx-small;">chevron_right</i><spam style="font-weight: bold;">'+item[0].snippet.channelTitle+'</spam>'+
+					 '<div class="row modal-trigger" style="float: right;font-size: larger;font-weight: 500;margin-right: 30px;cursor: pointer;margin-top: 0px;margin-bottom: 0px;" data-target="modal1" onclick=setId("'+item[0].id+'")>'+
+					 '<div class="col s12" style=" padding: 0px; "><i class="col s6 material-icons" style="font-size: 20px;padding-top: 5px;padding-right: 0px;">playlist_add</i>'+
+					 '<spam class="col s6" style="padding: 0px;">SAVE</spam></div></div>'
+					 +' </div><div class="divider">'
+					 +'</div>'+
+					 '<div class="section">'
+					 +' <p style="overflow: hidden;height: 200px;">'+item[0].snippet.description+'</p>'
+					 
+					 +'</div>'+'</div>'+
+					 '<div class="col s4"><h5>Playlist videos</h5><div id = "playlist-nextvideo"></div> <div class="divider"></div><h5>Next videos</h5><div id="videoCardContent"></div></div>'
+			 document.getElementById("videoPlayContent").innerHTML = videoCondent;
+			 document.getElementById("videoPlayContent").style="padding-left: 40px; padding-right: 0px;";
+			 horizontalplaylistVideoCard(index);
+			 horizontalCard(id);
+			 document.getElementById("side-nav").style.display="none";
+			 document.getElementById("mainPlatform").classList.remove("offset-s2");
+			 document.getElementById("mainPlatform").classList.replace("s10","s12");
+		 }
+		 
+		 var playlistViewCard = (src,index)=>{
+			 
+			 let content = 
+			 ' <div class="col s12 card" style=" padding: 0px;  margin-top: 20px;">'+
+			 '<img src="'+src+'" style=" width: 100%;">'+
+			 '<h5 style=" padding-left: 10px;">'+playlists[index].playlistName+'</h5> <div class="divider"></div>';
+			 
+			 for(var i=0; i<videoContent[index].length ;i++){
+				 
+				 var item1 = resultbyVideoId.items.filter(obj=>obj.id===videoContent[index][i]);
+				 src = item1[0].snippet.thumbnails.medium.url;
+				 
+				 content = content + 
+	             	'<div class="col s12"style="padding-right: 0px;">'+
+	                 '<div class="col s11 card horizontal hoverable"style="padding: 0px;">'+
+	                 
+	     			'<div class="card-image" style="cursor: pointer;" onclick=playvideoCall("'+videoContent[index][i]+'"'+','+''+index+')>'+
+	                 '<img src='+src+'>'+
+	                 '</div>'+
+	                 '<div class="card-stacked">'+
+	                 '<div class="card-content" style="padding-top: 10px;padding-bottom: 0px;padding-right: 0px;">'+
+	                 '<p class="card-title" style="margin-top: 0px;margin-bottom: 0px;font-size: larger;font-weight: bolder;">'+item1[0].snippet.channelTitle+'</p>'+
+						 '<p class = "card-para">'+item1[0].snippet.title+'</p>'+
+						 '</div>'+
+						 '</div>'+
+						 
+						 '</div>'+
+						 '<div class="col s1" style="padding: 0px;"><i class="material-icons" style="float: right;cursor: pointer;padding-top: 60px;padding-right: 10px;" onclick="removeListVideo(\''+item1[0].id+'\''+','+''+index+')">close</i></div>'+
+						 '</div>'
+			 }
+			 
+			 content = content + '</div>';
+			 
+			 
+				 
+					 
+					 
+			 document.getElementById("playlist-viewcontent").innerHTML = content;
+			 document.getElementById("playlist-titlecontent").classList.replace("s12","s7");
+			 document.getElementById("playlist-viewcontent").classList.add("s5");
+		 }
+		 
+		 var playlistDisplayContent = ()=>{
+			 videoContent = [];
+			 let content = '<div class = "col s12" id = "playlist-titlecontent"><h3 style="margin-top: 0px;padding-left: 10px;padding-top: 10px;">Playlist</h3>'; 
+				for (var i = 0; i < playlists.length; i++) {
+					let videoarrcontent=[];
+					 for (let x in playlists[i].videos){
+		                     videoarrcontent.push(x);
+					 }			
+					 videoContent.push(videoarrcontent);
+					 
+					 let src;
+					 if(videoContent[i].length !== 0){
+						 var item1 = resultbyVideoId.items.filter(obj=>obj.id===videoContent[i][0]);
+						 src = item1[0].snippet.thumbnails.medium.url;
+					 }else{
+						 
+						 src = "/images/YouTube-thumbnail.jpg";
+					 }
+					 
+				 content = content +'<div class="col s12" >'+
+              '<div class="card horizontal hoverable">'+
+              
+  			'<div class="card-image" style="cursor: pointer;padding: 10px;width: 200px;" onclick = playlistViewCard("'+src+'"'+','+i+')>'+
+              '<img src="'+src+'" style="border-radius: 5px;">'+
+              '</div>'+
+              '<div class="card-stacked">'+
+              '<div class="card-content" style="padding-top: 10px;padding-bottom: 0px;padding-right: 0px;">'+
+              '<h6 class="card-title" style="margin-top: 0px;margin-bottom: 0px;font-size: larger;font-weight: bolder;">'+playlists[i].playlistName+'</h6>'+
+					 '<a class = "card-para">'+playlists[i].modifiedAt+'</a><i class="material-icons"style="font-size: 10px;padding-left: 5px;padding-right: 5px;">keyboard_arrow_right</i><i class="material-icons" style="float: right;padding-right: 10px;cursor: pointer;" onclick="deleteplaylist('+playlists[1].playlistId+')">delete</i><spam> total videos : '+videoContent[i].length+'</spam>'+
+					 '</div>'+
+					 '</div>'+
+					 
+					 '</div>'+
+					 '</div>'
+			}
+				content = content +'</div><div class ="col " id="playlist-viewcontent"></div>'
+	        document.getElementById("videoPlayContent").innerHTML = content;
+		 }
+		 
+		 var playlistpage = ()=>{
+			 
+			 document.getElementById("side-nav").style.display="";
+			 document.getElementById("videoPlayContent").style=""
+			 document.getElementById("playlistNavTag").classList.add("active");
+			 document.getElementById("homepageNavTag").classList.remove("active");
+			 callplaylist();
+			
+			 
+			 playlistDisplayContent();
+		 }
+		 
+		 var sidenav = ()=>{
+			 if(document.getElementById("nav-icon").innerHTML === "navigate_before"){
+				 	 document.getElementById("nav-icon").innerHTML="menu"
+					 document.getElementById("side-nav").style.display="none";
+					 document.getElementById("mainPlatform").classList.remove("offset-s2");
+					 document.getElementById("mainPlatform").classList.replace("s10","s12");
+			 }else{
+				 document.getElementById("nav-icon").innerHTML="navigate_before"
+					 document.getElementById("side-nav").style.display="";
+					 document.getElementById("mainPlatform").classList.add("offset-s2");
+					 document.getElementById("mainPlatform").classList.replace("s12","s10");
+			 }
+			
+			 
+		 }
+		 
+		 var dropdownlist = ()=>{
+			 console.log("drop")
+			 let content = '<option value="" disabled selected>Choose your option</option>'
+			
+			 for (var i = 0; i < playlists.length; i++) {
+				 let src;
+				 if(videoContent[i].length !== 0){
+					 var item1 = resultbyVideoId.items.filter(obj=>obj.id===videoContent[i][0]);
+					 src = item1[0].snippet.thumbnails.medium.url;
+				 }else{
+					 
+					 src = "/images/YouTube-thumbnail.jpg";
+				 }
+				 
+				 content = content + '<option value="'+playlists[i].playlistName+'" data-icon="'+src+'">'+playlists[i].playlistName+'</option>'
+				 
+			 }
+			 document.getElementById("dropdownOptionlist").innerHTML = content;
+		 }
+		 
+		 var checklever = ()=>{
+			 
+				if(document.getElementById('on_or_off_checkbox').checked) {
+					document.getElementById("playlist_select").style.display=""
+					       document.getElementById("playlist_name").setAttribute("disabled", "disabled")
+					       dropdownlist();
+				}else{
+					
+				       document.getElementById('playlist_name').removeAttribute("disabled");
+				       document.getElementById("playlist_select").style.display="none"
+				}
+			}
+		 
+		
+		 callplaylist();
+		 
+		 var setId = (id)=>{
+			 document.getElementById("videoID-hidden").value = id;
+		 }
+		 
+		 var savePlaylistvideo = ()=>{
+			 var jsonBody = {
+			    		playlistName: document.getElementById("playlist_name").value,
+			    		videoId: document.getElementById("videoID-hidden").value
+			    };
+			 if(jsonBody.playlistName===""){
+				 jsonBody.playlistName = document.getElementById("dropdownOptionlist").value;
+			 }
+			 
+			        utils.callPostWithBodyjson('/v1/playlist',"PUT", jsonBody).then(() => {
+			            console.log("success");
+			        }, (res) => {
+			            
+			        });
+			    
+			    return false;
+		 }
+		 
+		 var deleteplaylist = (playlistId)=>{
+			 
+			 var jsonBody = {
+			    		playlistId: playlistId
+			    };
+			        utils.callPostWithBodyjson('/v1/playlist',"DELETE", jsonBody).then(() => {
+			            console.log("success");
+			            callplaylist();
+			            playlistpage();
+			        }, (res) => {
+			            
+			        });
+			    
+			    return false;
+		 }
+		 var removeListVideo = (videoId,index)=>{
+			 console.log(videoId);
+			 console.log(index);
+			 
+			 var jsonBody = {
+			    		playlistName: playlists[index].playlistName,
+			    		videoId: videoId
+			    		
+			    };
+			        utils.callPostWithBodyjson('/playlist/v1/video',"DELETE", jsonBody).then(() => {
+			            console.log("success");
+			            callplaylist();
+			            playlistpage();
+			        }, (res) => {
+			            
+			        });
+			    
+			    return false;
+		 }
+		 
+		 var signout = ()=>{
+			 utils.getHTMLFromUrl('/v1/signout',"POST").then(() => {
+				 M.toast({html: 'Sucessfuly Logout the contact profile'})
+		         location.href = "/";
+		        }, (res) => {
+		            
+		        });
+		    
+		    return false;
+		 }
 	</script>
-
-
 </body>
 </html>

@@ -47,8 +47,6 @@ public class YouTubeMimicUtils {
             }
         } catch (Exception var4) {
         }
-
-        System.out.println(jb.toString());
         return jb.toString();
     }
 

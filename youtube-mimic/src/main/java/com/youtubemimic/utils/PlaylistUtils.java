@@ -13,7 +13,6 @@ import static com.youtubemimic.constant.YoutubeMimicConstant.ApiError.success;
 import static com.youtubemimic.constant.YoutubeMimicConstant.ApiError.error;
 import static com.youtubemimic.constant.YoutubeMimicConstant.Basic.*;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,7 +42,7 @@ public class PlaylistUtils {
 		return (String) session.getAttribute("userId");
 	}
 
-	public void processGet() throws IOException {
+	public void processGet() throws Exception {
 		String playlistTitle = this.request.getParameter("playlistName");
 		try {
 			YouTubeMimicUtils.writeResponse(this.response,
@@ -56,7 +55,7 @@ public class PlaylistUtils {
 		}
 	}
 
-	public void processPost() throws IOException {
+	public void processPost() throws Exception {
 		try {
 			PlaylistEntity entity = getInputData();
 			entity.setCreateAt(formatter.format(date));
@@ -70,13 +69,14 @@ public class PlaylistUtils {
 		}
 	}
 
-	public void processPut() throws IOException {
+	public void processPut() throws Exception {
 		try {
 			PlaylistEntity entity = getInputData();
 			PlaylistEntity dbEntity = getDbEntity(entity.getPlaylistName());
 			HashMap<String, PlaylistVideo> videoupdate;
 			if (dbEntity == null) {
 				dbEntity = entity;
+				entity.setUserId(Long.parseLong(this.getSession()));
 				dbEntity.setCreateAt(formatter.format(date));
 				videoupdate = new HashMap<String, PlaylistVideo>();
 			} else {
@@ -93,11 +93,11 @@ public class PlaylistUtils {
 		}
 	}
 
-	public void processDelete() throws IOException {
+	public void processDelete() throws Exception {
 		PlaylistEntity entity = getInputData();
 		try {
 			ObjectifyWebListener.ofy().delete().type(PlaylistEntity.class)
-					.id(getDbEntity(entity.getPlaylistName()).getPlaylistId()).now();
+					.id(entity.getPlaylistId()).now();
 			successResponse(successfully_data_delete);
 			return;
 		} catch (Exception e) {
@@ -106,7 +106,7 @@ public class PlaylistUtils {
 		}
 	}
 
-	public void processVideoDelete() {
+	public void processVideoDelete() throws Exception {
 		PlaylistEntity entity = getInputData();
 
 		try {

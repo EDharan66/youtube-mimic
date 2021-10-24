@@ -15,6 +15,11 @@ import javax.servlet.http.HttpServletResponse;
 public class PlaylistVideo extends HttpServlet {
 
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        PlaylistUtils.getInstance(request, response).processVideoDelete();
+        try {
+			PlaylistUtils.getInstance(request, response).processVideoDelete();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 }

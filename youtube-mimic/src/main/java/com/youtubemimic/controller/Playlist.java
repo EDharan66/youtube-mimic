@@ -17,18 +17,39 @@ public class Playlist extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        PlaylistUtils.getInstance(request, response).processGet();
+        
+			try {
+				PlaylistUtils.getInstance(request, response).processGet();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        PlaylistUtils.getInstance(request, response).processPost();
+        try {
+			PlaylistUtils.getInstance(request, response).processPost();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        PlaylistUtils.getInstance(request, response).processPut();
+        try {
+			PlaylistUtils.getInstance(request, response).processPut();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        PlaylistUtils.getInstance(request, response).processDelete();
+        try {
+			PlaylistUtils.getInstance(request, response).processDelete();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 }
